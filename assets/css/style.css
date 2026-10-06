@@ -1,0 +1,148 @@
+<?php
+function appPath($relativePath)
+{
+    return __DIR__ . '/../' . ltrim($relativePath, '/');
+}
+
+function readJson($filePath)
+{
+    if (!file_exists($filePath)) {
+        return [];
+    }
+
+    $contents = file_get_contents($filePath);
+    if ($contents === false || trim($contents) === '') {
+        return [];
+    }
+
+    $decoded = json_decode($contents, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function writeJson($filePath, $data)
+{
+    $directory = dirname($filePath);
+    if (!is_dir($directory)) {
+        mkdir($directory, 0777, true);
+    }
+
+    $result = file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    return $result !== false;
+}
+
+function sanitizeText($value)
+{
+    return htmlspecialchars(trim((string) $value), ENT_QUOTES, 'UTF-8');
+}
+
+function generateApplicationId()
+{
+    return 'B-' . strtoupper(bin2hex(random_bytes(4)));
+}
+
+function calculateEligibilityScore($gpa, $annualIncome, $needLevel)
+{
+    $gpa = (float) $gpa;
+    $annualIncome = (float) $annualIncome;
+    $needLevel = (int) $needLevel;
+
+    $incomeFactor = max(0, 100000 - min($annualIncome, 100000));
+    $score = ($gpa * 30) + ($incomeFactor / 1000) + ($needLevel * 15);
+
+    if ($gpa >= 3.5 && $annualIncome <= 35000) {
+        $score += 10;
+    }
+
+    $score = max(0, min(100, round($score)));
+    return (int) $score;
+}
+
+function calculateRecommendedAward($score, $annualIncome)
+{
+    $score = (float) $score;
+    $annualIncome = (float) $annualIncome;
+
+    $award = ($score / 100) * 5000;
+    if ($annualIncome <= 30000) {
+        $award += 1500;
+    }
+
+    return round($award, 2);
+}
+
+function getApplications()
+{
+    $applications = readJson(appPath('data/applications.json'));
+    usort($applications, function ($a, $b) {
+        return strcmp(($b['created_at'] ?? ''), ($a['created_at'] ?? ''));
+    });
+
+    return $applications;
+}
+
+function getDashboardStats()
+{
+    $applications = getApplications();
+
+    $total = count($applications);
+    $approved = 0;
+    $pending = 0;
+    $fundingTotal = 0;
+    $scoreTotal = 0;
+
+    foreach ($applications as $application) {
+        $status = strtolower((string) ($application['status'] ?? 'pending'));
+        if ($status === 'approved') {
+            $approved++;
+            $fundingTotal += (float) ($application['recommended_award'] ?? 0);
+        }
+
+        if ($status === 'pending' || $status === 'in_review') {
+            $pending++;
+        }
+
+        $scoreTotal += (float) ($application['eligibility_score'] ?? 0);
+    }
+
+    $averageScore = $total > 0 ? round($scoreTotal / $total, 1) : 0;
+
+    return [
+        'total' => $total,
+        'approved' => $approved,
+        'pending' => $pending,
+        'funding_total' => $fundingTotal,
+        'approved_funding' => $fundingTotal,
+        'average_score' => $averageScore,
+    ];
+}
+
+function loginAdmin($username, $password)
+{
+    $users = readJson(appPath('data/users.json'));
+    foreach ($users as $user) {
+        if (($user['username'] ?? '') === $username && ($user['password'] ?? '') === $password) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function updateApplicationStatus($id, $status)
+{
+    $applications = readJson(appPath('data/applications.json'));
+    $updated = false;
+
+    foreach ($applications as &$application) {
+        if (($application['id'] ?? '') === $id) {
+            $application['status'] = strtolower(trim($status));
+            $updated = true;
+        }
+    }
+
+    if ($updated) {
+        writeJson(appPath('data/applications.json'), $applications);
+    }
+
+    return $updated;
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "B-001",
+    "student_name": "Sarah Johnson",
+    "student_id": "STD-2024-101",
+    "email": "sarah.johnson@example.com",
+    "institution": "State University",
+    "program": "Computer Science",
+    "year_of_study": 3,
+    "family_income": 24000,
+    "gpa": "3.85",
+    "need_level": 8,
+    "need_description": "My family relies on a single income and I am covering tuition plus living expenses.",
+    "status": "approved",
+    "eligibility_score": 92,
+    "recommended_award": 5000,
+    "created_at": "2026-10-05 09:10:12"
+  },
+  {
+    "id": "B-002",
+    "student_name": "Daniel Smith",
+    "student_id": "STD-2024-205",
+    "email": "daniel.smith@example.com",
+    "institution": "Northview College",
+    "program": "Business Administration",
+    "year_of_study": 2,
+    "family_income": 42000,
+    "gpa": "3.40",
+    "need_level": 6,
+    "need_description": "I have been working part-time to help support my education while managing my academic responsibilities.",
+    "status": "in_review",
+    "eligibility_score": 74,
+    "recommended_award": 3600,
+    "created_at": "2026-10-06 08:20:00"
+  }
+]

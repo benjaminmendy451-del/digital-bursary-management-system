@@ -1,0 +1,44 @@
+#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+double calculateEligibilityScore(double gpa, double annualIncome, int needLevel) {
+    double incomeFactor = max(0.0, 100000.0 - min(annualIncome, 100000.0));
+    double score = (gpa * 30.0) + (incomeFactor / 1000.0) + (needLevel * 15.0);
+
+    if (gpa >= 3.5 && annualIncome <= 35000.0) {
+        score += 10.0;
+    }
+
+    if (score > 100.0) {
+        score = 100.0;
+    }
+    if (score < 0.0) {
+        score = 0.0;
+    }
+
+    return score;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 4) {
+        cout << "Usage: bursary_calculator <gpa> <annual_income> <need_level>" << endl;
+        return 1;
+    }
+
+    try {
+        double gpa = stod(argv[1]);
+        double income = stod(argv[2]);
+        int needLevel = stoi(argv[3]);
+
+        double score = calculateEligibilityScore(gpa, income, needLevel);
+        cout << score << endl;
+        return 0;
+    } catch (const exception&) {
+        cout << "Invalid input values provided." << endl;
+        return 1;
+    }
+}
